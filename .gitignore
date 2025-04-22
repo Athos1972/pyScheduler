@@ -1,0 +1,9 @@
+logs/
+venv/
+.venv/
+*.pyc
+__pycache__/
+config/j*.toml
+*.pickl
+*.pickle
+global.toml
