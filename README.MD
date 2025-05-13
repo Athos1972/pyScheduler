@@ -68,7 +68,7 @@ default_venv = "venvs/default_env"
 
 Wenn kein `venv` im Job definiert ist, wird dieses als Fallback verwendet.
 
-## ▶️ Starten
+## ▶️ Starten (NICHT im VSCode - außerhalb in einer CMD-Shell)
 
 ```bash
 python job_scheduler.py

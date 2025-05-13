@@ -539,7 +539,7 @@ class JobScheduler:
                 
                 if config['metadata'].get('enabled', True):
                     self._schedule_job(config)
-                    self.logger.info(f"Successfully loaded job: {config['metadata']['name']}")
+                    self.logger.info(f"Successfully loaded job: {config['metadata']['name']}\n")
                 else:
                     self.logger.info(f"Skipping disabled job: {config['metadata']['name']}")
                     
@@ -567,7 +567,7 @@ class JobScheduler:
     def _update_job(self, job_name, new_config):
         schedule.clear(job_name)
         self._schedule_job(new_config)
-        self.logger.info(f"Updated job: {job_name}")
+        self.logger.info(f"Updated job: {job_name}\n")
 
     def _schedule_job(self, config):
         exec_cfg = config['execution']
@@ -740,7 +740,11 @@ class JobScheduler:
                     next_run = 1
                 
                 self._log_upcoming_jobs()
-                time.sleep(min(next_run, 60))  # Max 60s sleep for responsiveness
+                if min(next_run, 60) < 1:
+                    self.logger.critical("Sleeping for 1 second to avoid busy wait. Should have started earlier!")
+                    time.sleep(1)
+                else:
+                    time.sleep(min(next_run, 60))  # Max 60s sleep for responsiveness
                 schedule.run_pending()
         except KeyboardInterrupt:
             self.logger.info("Shutting down scheduler...")
