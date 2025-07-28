@@ -393,16 +393,25 @@ class JobScheduler:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
-                timeout=3600,  # 1 hour timeout
+                timeout=10800,  # 3 hour timeout
                 cwd=script_path.parent  # Arbeitsverzeichnis auf Script-Ordner setzen
             )
             if result.stdout:
                 self.logger.info(f"Job output:\n{result.stdout.strip()}")
-        except subprocess.TimeoutExpired:
-            self.logger.error("Job timed out after 1 hour")
+        except subprocess.TimeoutExpired as e:
+            self.logger.error("Job timed out after 3 hours")
+            if e.stdout:
+                self.logger.error(f"Partial output before timeout:\n{e.stdout.strip()}")
+            if e.stderr:
+                self.logger.error(f"Partial error output before timeout:\n{e.stderr.strip()}")
             raise
         except subprocess.CalledProcessError as e:
-            self.logger.error(f"Job failed with code {e.returncode}:\n{e.stderr.strip()}")
+            err_msg = f"Job failed with code {e.returncode}"
+            if e.stdout:
+                err_msg += f"\nSTDOUT:\n{e.stdout.strip()}"
+            if e.stderr:
+                err_msg += f"\nSTDERR:\n{e.stderr.strip()}"
+            self.logger.error(err_msg)
             raise
         except Exception as e:
             self.logger.error(f"Unexpected error: {str(e)}")
@@ -716,16 +725,25 @@ class JobScheduler:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
-                timeout=3600,  # 1 hour timeout
+                timeout=10800,  # 3 hour timeout
                 cwd=script_path.parent  # Arbeitsverzeichnis auf Script-Ordner setzen
             )
             if result.stdout:
                 self.logger.info(f"Job output:\n{result.stdout.strip()}")
-        except subprocess.TimeoutExpired:
-            self.logger.error("Job timed out after 1 hour")
+        except subprocess.TimeoutExpired as e:
+            self.logger.error("Job timed out after 3 hours")
+            if e.stdout:
+                self.logger.error(f"Partial output before timeout:\n{e.stdout.strip()}")
+            if e.stderr:
+                self.logger.error(f"Partial error output before timeout:\n{e.stderr.strip()}")
             raise
         except subprocess.CalledProcessError as e:
-            self.logger.error(f"Job failed with code {e.returncode}:\n{e.stderr.strip()}")
+            err_msg = f"Job failed with code {e.returncode}"
+            if e.stdout:
+                err_msg += f"\nSTDOUT:\n{e.stdout.strip()}"
+            if e.stderr:
+                err_msg += f"\nSTDERR:\n{e.stderr.strip()}"
+            self.logger.error(err_msg)
             raise
         except Exception as e:
             self.logger.error(f"Unexpected error: {str(e)}")
