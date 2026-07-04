@@ -58,6 +58,35 @@ config = "configs/report_config.toml"
 
 Die frequency kann "daily", "multi_daily", "weekly", "monthly" sein. Bei "multi_daily" musst du statt "time" ein Array von times mitgeben, z.B. ```times = ["12:00", "14:00"]```
 
+### `working_dir` — optionales Arbeitsverzeichnis
+
+Standardmäßig wird das Verzeichnis des Scripts (`script_path.parent`) als Arbeitsverzeichnis (`cwd`) verwendet.
+Mit dem optionalen Key `working_dir` kann ein abweichendes Verzeichnis gesetzt werden — z. B. das Projekt-Root, wenn das Script Imports aus übergeordneten Paketen benötigt:
+
+```toml
+[execution]
+script = "SKVU_US/us_health_monitor.py"
+working_dir = "/opt/myproject"   # optional; default: Verzeichnis des Scripts
+frequency = "daily"
+time = "06:00"
+```
+
+### Automatisches PYTHONPATH-Handling
+
+Vor dem Start jedes Scripts werden **zwei Einträge automatisch** an den Anfang von `PYTHONPATH` gestellt — ohne dass die Job-Config angefasst werden muss:
+
+1. **Effektives Arbeitsverzeichnis** (`working_dir` falls gesetzt, sonst `script_path.parent`)
+2. **Erkannter Projekt-Root** des Scripts — der Scheduler sucht in den Elternverzeichnissen des Scripts nach dem ersten Verzeichnis, das einen der folgenden Marker enthält: `.git`, `pyproject.toml`, `setup.py`, `setup.cfg`, `requirements.txt`. Wird ein solcher Root gefunden, wird er ebenfalls in `PYTHONPATH` aufgenommen.
+
+**Beispiel:** Script liegt in `atlassian_utils/SKVU_US/us_health_monitor.py`, abhängiges Package in `atlassian_utils/WstwConfl/`. Da `atlassian_utils/` ein `.git`-Verzeichnis enthält, wird `atlassian_utils/` automatisch erkannt und in `PYTHONPATH` eingetragen — `from WstwConfl import ...` funktioniert ohne weitere Config.
+
+Weitere Regeln:
+
+- Ist `PYTHONPATH` bereits gesetzt, werden die neuen Einträge vorangestellt (`:` auf macOS/Linux, `;` auf Windows).
+- Einträge, die bereits in `PYTHONPATH` enthalten sind, werden nicht doppelt eingetragen.
+- Wird kein Projekt-Marker gefunden, werden keine weiteren Elternverzeichnisse hinzugefügt.
+- Ist `script_path` relativ, wird er für die Root-Erkennung gegen `working_dir` (falls gesetzt) oder das aktuelle Prozess-cwd aufgelöst.
+
 
 ## 🛠️ Globale Konfiguration (`config/global.toml`)
 
@@ -85,7 +114,8 @@ Wenn sich eine `.toml`-Datei im `config/`-Ordner ändert, wird der Scheduler den
 
 ## 📌 Hinweise
 
-- Der Arbeitsordner (`cwd`) für jedes Script wird automatisch auf dessen Speicherort gesetzt.
+- Der Arbeitsordner (`cwd`) für jedes Script wird standardmäßig auf das Verzeichnis des Scripts gesetzt; mit dem optionalen Key `working_dir` kann ein abweichendes Verzeichnis verwendet werden.
+- `PYTHONPATH` wird immer automatisch um das effektive Arbeitsverzeichnis **und** den erkannten Projekt-Root des Scripts erweitert — kein manuelles Setzen pro Job nötig.
 - Log-Ausgaben landen in `logs/scheduler.log` mit Rotation (max. 5 MB, 5 Dateien).
 - Scripts sollten eigene relative Pfade möglichst mit `Path(__file__).parent` auflösen.
 
